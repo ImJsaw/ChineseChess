@@ -3,13 +3,13 @@
 #include<Windows.h>
 
 //define 
-#define screenX 70
+#define screenX 81
 #define screenY 23
 
 #define UIY 21
 
 #define logX 21
-#define boardX 26
+#define boardX 34
 #define hintX 26
 
 #define red 0
@@ -35,8 +35,10 @@ private:
 	void drawUI();
 	void drawLog();
 	void drawBoard();
+	void drawChess();
+	void drawChess(int x, int y);
 	void drawHint();
-	string num2chess(int num,bool left);
+	string num2chess(int num, int side);
 
 	//variable
 	char screenBuffer[screenX][screenY];
