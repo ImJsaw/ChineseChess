@@ -15,6 +15,9 @@
 #define red 0
 #define black 1
 
+#define X 0
+#define Y 1
+
 using namespace std;
 
 class Screen{
@@ -33,9 +36,9 @@ private:
 	void readBoard();
 	void writeBoard();
 	void drawUI();
+	void drawCursor();
 	void drawLog();
 	void drawBoard();
-	void drawChess();
 	void drawChess(int x, int y);
 	void drawHint();
 	string num2chess(int num, int side);
@@ -45,6 +48,7 @@ private:
 	int screenColor[screenX][screenY];
 	int board[9][10];
 	int turn;
+	int cursor[2];
 
 };
 

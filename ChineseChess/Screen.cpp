@@ -16,6 +16,7 @@ void Screen::update(){
 	//draw to buffer, easier to manage
 	drawBorder(0,0,screenX-1,screenY-1);
 	drawUI();
+	drawCursor();
 	//draw buffer to screen
 	for (int y = 0; y < screenY; y++) {
 		cout << "    ";
@@ -33,12 +34,22 @@ void Screen::init()
 	for (int i = 0; i < screenX; i++)
 		for (int j = 0; j < screenY; j++)
 			screenColor[i][j] = 15;//15 : white text, black BG (normal)
+	//init cursor 
+	cursor[X] = 0;
+	cursor[Y] = 0;
 }
 
 void Screen::drawUI(){
 	drawLog();
 	drawBoard();
 	drawHint();
+}
+
+void Screen::drawCursor(){
+	int cursorBG = BACKGROUND_BLUE | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
+	screenColor[logX + 1 + 4 * cursor[X]][2 + 2*cursor[Y]] = cursorBG;
+	screenColor[logX + 2 + 4 * cursor[X]][2 + 2 * cursor[Y]] = cursorBG;
+
 }
 
 void Screen::drawBorder(int xStart, int yStart, int xEnd, int yEnd){
@@ -143,21 +154,6 @@ void Screen::drawBoard(){
 
 	}
 	
-}
-
-void Screen::drawChess() {
-	int whiteBG = BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED;
-
-	for (int y = 0; y < 10; y++) {
-
-		//writeString(logX + 1, 2 + 2 * y, num2chess(board[0][y], 0), whiteBG);
-		for (int x = 1; x < 8; x++) {
-			drawChess(x, y);
-			//writeString(logX + 1 + 4 * x, 2 + 2 * y, num2chess(board[x][y], 1), whiteBG);
-		}
-		//writeString(logX + 4 * 8, 2 + 2 * y, num2chess(board[8][y], 2), whiteBG);
-
-	}
 }
 
 void Screen::drawChess(int x, int y) {
