@@ -23,7 +23,9 @@ void keyEvent() {
 		up = true;
 	if (!GetAsyncKeyState(VK_UP) && up == true) {
 		up = false;
+		myScreen.moveCursor(UP);
 		myScreen.update();
+		//up arrow event
 		printf("The Up Arrow Has Been Pressed\n");
 	}
 
@@ -31,7 +33,10 @@ void keyEvent() {
 		down = true;
 	if (!GetAsyncKeyState(VK_DOWN) && down == true) {
 		down = false;
+		myScreen.moveCursor(DOWN);
 		myScreen.update();
+		//down arrow event
+
 		printf("The DOWN Arrow Has Been Pressed\n");
 	}
 
@@ -39,7 +44,10 @@ void keyEvent() {
 		l = true;
 	if (!GetAsyncKeyState(VK_LEFT) && l == true) {
 		l = false;
+		myScreen.moveCursor(LEFT);
 		myScreen.update();
+		//left arrow event
+
 		printf("The LEFT ARROW Has Been Pressed\n");
 	}
 
@@ -47,7 +55,9 @@ void keyEvent() {
 		r = true;
 	if (!GetAsyncKeyState(VK_RIGHT) && r == true) {
 		r = false;
+		myScreen.moveCursor(RIGHT);
 		myScreen.update();
+		//rihgt arrow event
 		printf("The RIGHT ARROW Has Been Pressed\n");
 	}
 }

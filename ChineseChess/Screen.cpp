@@ -26,6 +26,8 @@ void Screen::update(){
 		}
 		putchar('\n');
 	}
+	//cursor position
+	cout << "cursor : " << cursor[X] << "," << cursor[Y] << endl;
 }
 
 void Screen::init()
@@ -172,6 +174,25 @@ void Screen::drawHint(){
 	drawBorder(logX + boardX + 2, 1, screenX - 2, UIY);
 }
 
+void Screen::moveCursor(int face){
+	switch (face){
+	case UP:
+		if (cursor[Y] > 0) cursor[Y]--;
+		break;
+	case DOWN:
+		if (cursor[Y] < 9) cursor[Y]++;
+		break;
+	case LEFT:
+		if (cursor[X] > 0) cursor[X]--;
+		break;
+	case RIGHT:
+		if (cursor[X] < 8) cursor[X]++;
+		break;
+	default:
+		break;
+	}
+}
+
 string Screen::num2chess(int num, int side){
 	string text = "";
 	switch (num){
@@ -206,7 +227,7 @@ string Screen::num2chess(int num, int side){
 		text = "相";
 		break;
 	case 11:
-		text = "俥";
+		text = "車";
 		break;
 	case 12:
 		text = "傌";
