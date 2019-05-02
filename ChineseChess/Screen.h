@@ -12,8 +12,8 @@
 #define boardX 34
 #define hintX 26
 
-#define red 0
-#define black 1
+#define red 1
+#define black 0
 //define xy, easy to access array
 #define X 0
 #define Y 1
@@ -23,14 +23,22 @@
 #define DOWN 1
 #define LEFT 2 
 #define RIGHT 3
+//define moveable table content
+#define CANTMOVE 0
+#define MOVEABLE 1
+#define EATABLE 2
+
+#define KINGZONE_X 5
+#define KINGZONE_BLACK_Y 1
+#define KINGZONE_RED_Y 9
+
 
 using namespace std;
 
 enum gameState
 {
-	chooseChess,
-	chooseMove,
-	chooseEat
+	PICK = 0,
+	MOVE,
 };
 
 class Screen{
@@ -40,17 +48,20 @@ public:
 	void update();
 	void init();
 	void moveCursor(int face);
+	void checkCursor();
 private:
 	//common
 	void drawBorder(int xStart,int yStart, int xEnd, int yEnd);
 	void writeString(int xStart, int y, string str, int color=15);
 	void changeBlockColor(int xStart, int yStart, int xEnd, int yEnd, int color);
+	bool markMove(int x, int y, int yStart, int yEnd, int xStart, int xEnd);
 	
 	//draw func
 	void readBoard();
 	void writeBoard();
 	void drawUI();
 	void drawCursor();
+	void drawMoveable();
 	void drawLog();
 	void drawBoard();
 	void drawChess(int x, int y);
@@ -58,13 +69,17 @@ private:
 
 	//other func
 	string num2chess(int num, int side);
+	bool calcAvaliableMove();
 
 	//variable
 	char screenBuffer[screenX][screenY];
 	int screenColor[screenX][screenY];
 	int board[9][10];
+	int moveAble[9][10];
 	int turn;
 	int cursor[2];
+	int choosedChess[2];
+	int gameState = PICK;
 
 };
 

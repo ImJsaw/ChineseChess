@@ -5,7 +5,6 @@
 Screen::Screen(){
 }
 
-
 Screen::~Screen(){
 }
 
@@ -16,6 +15,11 @@ void Screen::update(){
 	//draw to buffer, easier to manage
 	drawBorder(0,0,screenX-1,screenY-1);
 	drawUI();
+	//
+	cout <<"gameState" <<gameState << endl;
+	if (gameState == MOVE) {
+		drawMoveable();
+	}
 	drawCursor();
 	//draw buffer to screen
 	for (int y = 0; y < screenY; y++) {
@@ -51,7 +55,20 @@ void Screen::drawCursor(){
 	int cursorBG = BACKGROUND_BLUE | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
 	screenColor[logX + 1 + 4 * cursor[X]][2 + 2*cursor[Y]] = cursorBG;
 	screenColor[logX + 2 + 4 * cursor[X]][2 + 2 * cursor[Y]] = cursorBG;
+}
 
+void Screen::drawMoveable(){
+	int moveBG = BACKGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
+	for (int y = 0; y < 10; y++) {
+		for (int x = 0; x < 9; x++) {
+			if (moveAble[x][y] == MOVEABLE) {
+				//cout << "x,y:" << x << "," << y << endl;
+				//system("pause");
+				screenColor[logX + 1 + 4 * x][2 + 2 * y] = moveBG;
+				screenColor[logX + 2 + 4 * x][2 + 2 * y] = moveBG;
+			}
+		}
+	}
 }
 
 void Screen::drawBorder(int xStart, int yStart, int xEnd, int yEnd){
@@ -89,6 +106,18 @@ void Screen::changeBlockColor(int xStart, int yStart, int xEnd, int yEnd, int co
 			screenColor[x][y] = color;
 }
 
+bool Screen::markMove(int x, int y, int yStart = 0, int yEnd = 9, int xStart = 0, int xEnd = 8){
+	if (x < xStart || x > xEnd) //x exceed border
+		return false;
+	if (y < yStart || y > yEnd) //y exceed border
+		return false;
+	if (board[x][y] != 0)//not blank //eat
+		return false;
+	moveAble[x][y] = MOVEABLE;
+
+	return true;
+}
+
 void Screen::readBoard(){
 	fstream boardFile;
 	boardFile.open("data.txt");
@@ -105,11 +134,11 @@ void Screen::writeBoard(){
 	boardFile.open("data.txt");
 	for (int y = 0; y < 10; y++) {
 		for (int x = 0; x < 9; x++) {
-			boardFile << board[x][y];
+			boardFile << board[x][y] << " ";
 		}
 		boardFile << endl;
 	}
-	boardFile << endl << turn;
+	boardFile << turn;
 	boardFile.close();
 }
 
@@ -193,6 +222,44 @@ void Screen::moveCursor(int face){
 	}
 }
 
+void Screen::checkCursor(){
+	switch (gameState){
+	case PICK:
+		if (calcAvaliableMove()) {
+			//switch to move state
+			gameState = MOVE;
+			choosedChess[X] = cursor[X];
+			choosedChess[Y] = cursor[Y];
+			cout << "pick valiable chess";
+			update();
+			
+		}
+		break;
+	case MOVE:
+		if (moveAble[cursor[X]][cursor[Y]] == CANTMOVE) {
+			//switch to move state
+			gameState = PICK;
+			cout << "goto pick state";
+			update();
+		}
+		else if (moveAble[cursor[X]][cursor[Y]] == MOVEABLE) {
+			gameState = PICK;
+			cout << "MOVE!!!" << choosedChess[X] << "," << choosedChess[Y] 
+				<< "to" << cursor[X] << "," << cursor[Y];
+			board[cursor[X]][cursor[Y]] = board[choosedChess[X]][choosedChess[Y]];
+			board[choosedChess[X]][choosedChess[Y]] = 0;
+			//system("pause");
+			writeBoard();
+			update();
+		}
+
+		break;
+	default:
+		break;
+	}
+	
+}
+
 string Screen::num2chess(int num, int side){
 	string text = "";
 	switch (num){
@@ -247,5 +314,136 @@ string Screen::num2chess(int num, int side){
 	return  text;
 }
 
+bool Screen::calcAvaliableMove(){
+	if (board[cursor[X]][cursor[Y]] == 0) {
+		cout << "pick blank" << endl;
+		return false;
+	}
+	//pick self chess
+	cout << "pick" << board[cursor[X]][cursor[Y]] << endl;
 
+	//init moveable table
+	for (int y = 0; y < 10; y++)
+		for (int x = 0; x < 9; x++)
+			moveAble[x][y] = CANTMOVE;
+	int x = cursor[X];
+	int y = cursor[Y];
+	int tmpX, tmpY;
 
+	switch (board[x][y]){
+	case 1://將
+		cout << "pick 1";
+		markMove(x, y - 1, 0, 2, 3, 5);
+		markMove(x, y + 1, 0, 2, 3, 5);
+		markMove(x-1, y, 0, 2, 3, 5);
+		markMove(x+1, y, 0, 2, 3, 5);
+		if ((x + y) % 2 == 1) {//line use
+			markMove(x-1, y - 1, 0, 2,3,5);
+			markMove(x+1, y + 1, 0, 2, 3, 5);
+			markMove(x - 1, y+1, 0, 2, 3, 5);
+			markMove(x + 1, y-1, 0, 2, 3, 5);
+		}
+		break;
+	case 8://帥
+		cout << "pick 1";
+		markMove(x, y - 1, 7, 9, 3, 5);
+		markMove(x, y + 1, 7, 9, 3, 5);
+		markMove(x - 1, y, 7, 9, 3, 5);
+		markMove(x + 1, y, 7, 9, 3, 5);
+		if ((x + y) % 2 == 0) {//line use
+			markMove(x - 1, y - 1, 7, 9, 3, 5);
+			markMove(x + 1, y + 1, 7, 9, 3, 5);
+			markMove(x - 1, y + 1, 7, 9, 3, 5);
+			markMove(x + 1, y - 1, 7, 9, 3, 5);
+		}
+		break;
+	case 2://士
+		cout << "pick 1";
+		if ((x + y) % 2 == 1) {//line use
+			markMove(x - 1, y - 1, 0, 2, 3, 5);
+			markMove(x + 1, y + 1, 0, 2, 3, 5);
+			markMove(x - 1, y + 1, 0, 2, 3, 5);
+			markMove(x + 1, y - 1, 0, 2, 3, 5);
+		}
+		break;
+	case 9:
+		if ((x + y) % 2 == 0) {//line use
+			markMove(x - 1, y - 1, 7, 9, 3, 5);
+			markMove(x + 1, y + 1, 7, 9, 3, 5);
+			markMove(x - 1, y + 1, 7, 9, 3, 5);
+			markMove(x + 1, y - 1, 7, 9, 3, 5);
+		}
+		break;
+	case 3://象
+		if (board[x + 1][y + 1] == 0)
+			markMove(x + 2, y + 2, 0, 4);
+		if (board[x + 1][y - 1] == 0)
+			markMove(x + 2, y - 2, 0, 4);
+		if (board[x - 1][y + 1] == 0)
+			markMove(x - 2, y + 2, 0, 4);
+		if (board[x - 1][y - 1] == 0)
+			markMove(x - 2, y - 2, 0, 4);
+		break;
+	case 10://象
+		if (board[x + 1][y + 1] == 0)
+			markMove(x + 2, y + 2, 5, 9);
+		if (board[x + 1][y - 1] == 0)
+			markMove(x + 2, y - 2, 5, 9);
+		if (board[x - 1][y + 1] == 0)
+			markMove(x - 2, y + 2, 5, 9);
+		if (board[x - 1][y - 1] == 0)
+			markMove(x - 2, y - 2, 5, 9);
+		break;
+	case 4://車
+	case 11:
+	case 6://包
+	case 13:
+		tmpX = x+1;
+		while (markMove(tmpX, y)) {
+			tmpX++;
+		}
+		tmpX = x-1;
+		while (markMove(tmpX, y)) {
+			tmpX--;
+		}
+		tmpY = y+1;
+		while (markMove(x, tmpY)) {
+			tmpY++;
+		}
+		tmpY = y-1;
+		while (markMove(x, tmpY)) {
+			tmpY--;
+		}
+		break;
+	case 5://馬
+	case 12:
+		if (board[x][y + 1] == 0) {
+			markMove(x + 1, y + 2);
+			markMove(x - 1, y + 2);
+		}
+		if (board[x][y - 1] == 0) {
+			markMove(x + 1, y - 2);
+			markMove(x - 1, y - 2);
+		}
+		if (board[x+1][y] == 0) {
+			markMove(x + 2, y + 1);
+			markMove(x + 2, y - 1);
+		}
+		if (board[x-1][y] == 0) {
+			markMove(x-2, y + 1);
+			markMove(x-2, y -1);
+		}
+		break;
+	case 7://卒
+		markMove(x, y + 1);
+		break;
+	case 14://兵
+		markMove(x, y - 1);
+		break;
+
+	default:
+		break;
+	}
+	return true;
+	
+}

@@ -4,7 +4,7 @@
 
 
 Screen myScreen;
-bool up,down,r,l;
+bool up,down,r,l,enter;
 
 void initial() {
 	//init screen
@@ -59,6 +59,17 @@ void keyEvent() {
 		myScreen.update();
 		//rihgt arrow event
 		printf("The RIGHT ARROW Has Been Pressed\n");
+	}
+
+	if (GetAsyncKeyState(VK_RETURN))
+		enter = true;
+	if (!GetAsyncKeyState(VK_RETURN) && enter == true) {
+		enter = false;
+
+		myScreen.checkCursor();
+		//enter event
+
+		printf("ENTER Has Been Pressed\n");
 	}
 }
 
