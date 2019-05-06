@@ -12,8 +12,8 @@
 #define boardX 34
 #define hintX 26
 
-#define red 1
-#define black 0
+#define RED 1
+#define BLACK 0
 //define xy, easy to access array
 #define X 0
 #define Y 1
@@ -47,15 +47,20 @@ public:
 	~Screen();
 	void update();
 	void init();
+	void callMenu();
 	void moveCursor(int face);
 	void checkCursor();
+
+	bool showMenu = false;
 private:
 	//common
 	void drawBorder(int xStart,int yStart, int xEnd, int yEnd);
 	void writeString(int xStart, int y, string str, int color=15);
 	void changeBlockColor(int xStart, int yStart, int xEnd, int yEnd, int color);
+	void cleanBlock(int xStart, int yStart, int xEnd, int yEnd, int color);
 	bool markMove(int x, int y, int yStart, int yEnd, int xStart, int xEnd);
-	
+	void changeTurn() { if (turn == RED) turn = BLACK; else turn = RED;};
+
 	//draw func
 	void readBoard();
 	void writeBoard();
@@ -63,6 +68,7 @@ private:
 	void drawCursor();
 	void drawMoveable();
 	void drawLog();
+	void drawMenu();
 	void drawBoard();
 	void drawChess(int x, int y);
 	void drawHint();

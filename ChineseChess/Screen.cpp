@@ -16,11 +16,7 @@ void Screen::update(){
 	drawBorder(0,0,screenX-1,screenY-1);
 	drawUI();
 	//
-	cout <<"gameState" <<gameState << endl;
-	if (gameState == MOVE) {
-		drawMoveable();
-	}
-	drawCursor();
+	//cout <<"gameState" <<gameState << endl;
 	//draw buffer to screen
 	for (int y = 0; y < screenY; y++) {
 		cout << "    ";
@@ -31,11 +27,10 @@ void Screen::update(){
 		putchar('\n');
 	}
 	//cursor position
-	cout << "cursor : " << cursor[X] << "," << cursor[Y] << endl;
+	//cout << "cursor : " << cursor[X] << "," << cursor[Y] << endl;
 }
 
-void Screen::init()
-{
+void Screen::init(){
 	//init text color
 	for (int i = 0; i < screenX; i++)
 		for (int j = 0; j < screenY; j++)
@@ -47,7 +42,12 @@ void Screen::init()
 
 void Screen::drawUI(){
 	drawLog();
-	drawBoard();
+	if (showMenu) {
+		cleanBlock(logX, 1, logX + boardX, UIY, BACKGROUND_BLUE|BACKGROUND_GREEN|BACKGROUND_RED);
+		drawMenu();
+	}
+	else
+		drawBoard();
 	drawHint();
 }
 
@@ -59,6 +59,7 @@ void Screen::drawCursor(){
 
 void Screen::drawMoveable(){
 	int moveBG = BACKGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
+	int eatBG = BACKGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
 	for (int y = 0; y < 10; y++) {
 		for (int x = 0; x < 9; x++) {
 			if (moveAble[x][y] == MOVEABLE) {
@@ -66,6 +67,12 @@ void Screen::drawMoveable(){
 				//system("pause");
 				screenColor[logX + 1 + 4 * x][2 + 2 * y] = moveBG;
 				screenColor[logX + 2 + 4 * x][2 + 2 * y] = moveBG;
+			}
+			else if (moveAble[x][y] == EATABLE) {
+				//cout << "x,y:" << x << "," << y << endl;
+				//system("pause");
+				screenColor[logX + 1 + 4 * x][2 + 2 * y] = eatBG;
+				screenColor[logX + 2 + 4 * x][2 + 2 * y] = eatBG;
 			}
 		}
 	}
@@ -106,16 +113,41 @@ void Screen::changeBlockColor(int xStart, int yStart, int xEnd, int yEnd, int co
 			screenColor[x][y] = color;
 }
 
+void Screen::cleanBlock(int xStart, int yStart, int xEnd, int yEnd, int color){
+	for (int y = yStart; y <= yEnd; y++) {
+		for (int x = xStart; x <= xEnd; x++) {
+			screenBuffer[x][y] = ' ';
+			screenColor[x][y] = color;
+		}
+	}
+}
+
+//if can keep move return true
 bool Screen::markMove(int x, int y, int yStart = 0, int yEnd = 9, int xStart = 0, int xEnd = 8){
 	if (x < xStart || x > xEnd) //x exceed border
 		return false;
 	if (y < yStart || y > yEnd) //y exceed border
 		return false;
-	if (board[x][y] != 0)//not blank //eat
-		return false;
-	moveAble[x][y] = MOVEABLE;
+	if (board[x][y] == 0) {
+		//blank ==> moveable
+		moveAble[x][y] = MOVEABLE;
+		return true;
+	}
+	//eatable
+	if (turn == RED && board[x][y] < 8) {
+		moveAble[x][y] = EATABLE;
+	}
+	else if(turn == BLACK && board[x][y] >= 8){
+		moveAble[x][y] = EATABLE;
+	}
+	//self chess
+	return false;
+}
 
-	return true;
+void Screen::callMenu(){
+	if (showMenu) showMenu = false;
+	else showMenu = true;
+	update();
 }
 
 void Screen::readBoard(){
@@ -138,7 +170,8 @@ void Screen::writeBoard(){
 		}
 		boardFile << endl;
 	}
-	boardFile << turn;
+	//fill blank at end to prevent error turn
+	boardFile << turn << "       ";
 	boardFile.close();
 }
 
@@ -184,7 +217,18 @@ void Screen::drawBoard(){
 		}
 
 	}
-	
+
+	if (gameState == MOVE) {
+		drawMoveable();
+	}
+	drawCursor();
+}
+
+void Screen::drawMenu() {
+	writeString(logX + 10, 6, " 離 開 遊 戲 ? ", FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);//white text
+	writeString(logX + 8, 10, " ESC 鍵 返 回 遊 戲 ", FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);//white text
+	writeString(logX + 7, 12, " ENTER 鍵 離 開 遊 戲 ", FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);//white text
+
 }
 
 void Screen::drawChess(int x, int y) {
@@ -201,9 +245,22 @@ void Screen::drawChess(int x, int y) {
 void Screen::drawHint(){
 	//(screenX - hintX - 1,1) ~ (screenX -1 , UIY)
 	drawBorder(logX + boardX + 2, 1, screenX - 2, UIY);
+	if(turn == RED)
+		writeString(logX + boardX + 2 + 5, 5, " 紅 方", FOREGROUND_RED);//red text
+	else
+		writeString(logX + boardX + 2 + 5, 5, " 黑 方", FOREGROUND_INTENSITY);//black text
+	writeString(logX + boardX + 2 + 11, 5, " 下 棋 ", FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);//white text
+
+
+	writeString(logX + boardX + 2 + 3, 13, " Esc 鍵呼叫主選單 ", FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);//white text
+
+	
 }
 
 void Screen::moveCursor(int face){
+	//void move cursor during show menu
+	if (showMenu) return;
+
 	switch (face){
 	case UP:
 		if (cursor[Y] > 0) cursor[Y]--;
@@ -248,6 +305,17 @@ void Screen::checkCursor(){
 				<< "to" << cursor[X] << "," << cursor[Y];
 			board[cursor[X]][cursor[Y]] = board[choosedChess[X]][choosedChess[Y]];
 			board[choosedChess[X]][choosedChess[Y]] = 0;
+			changeTurn();
+			//system("pause");
+			writeBoard();
+			update();
+		}
+		else if (moveAble[cursor[X]][cursor[Y]] == EATABLE) {
+			gameState = PICK;
+			cout << "EAT!!!"<< cursor[X] << "," << cursor[Y] << " : " << board[cursor[X]][cursor[Y]] << endl;
+			board[cursor[X]][cursor[Y]] = board[choosedChess[X]][choosedChess[Y]];
+			board[choosedChess[X]][choosedChess[Y]] = 0;
+			changeTurn();
 			//system("pause");
 			writeBoard();
 			update();
@@ -316,11 +384,19 @@ string Screen::num2chess(int num, int side){
 
 bool Screen::calcAvaliableMove(){
 	if (board[cursor[X]][cursor[Y]] == 0) {
-		cout << "pick blank" << endl;
+		cout << "這裡沒有棋" << endl;
 		return false;
 	}
 	//pick self chess
-	cout << "pick" << board[cursor[X]][cursor[Y]] << endl;
+	//cout << "pick" << board[cursor[X]][cursor[Y]] << endl;
+	if (turn == RED && board[cursor[X]][cursor[Y]] <= 7) {
+		cout << "選自己的棋好嗎" << endl;
+		return false;
+	}
+	else if (turn == BLACK && board[cursor[X]][cursor[Y]] > 7) {
+		cout << "選自己的棋好嗎" << endl;
+		return false;
+	}
 
 	//init moveable table
 	for (int y = 0; y < 10; y++)
@@ -332,7 +408,6 @@ bool Screen::calcAvaliableMove(){
 
 	switch (board[x][y]){
 	case 1://將
-		cout << "pick 1";
 		markMove(x, y - 1, 0, 2, 3, 5);
 		markMove(x, y + 1, 0, 2, 3, 5);
 		markMove(x-1, y, 0, 2, 3, 5);
@@ -345,7 +420,6 @@ bool Screen::calcAvaliableMove(){
 		}
 		break;
 	case 8://帥
-		cout << "pick 1";
 		markMove(x, y - 1, 7, 9, 3, 5);
 		markMove(x, y + 1, 7, 9, 3, 5);
 		markMove(x - 1, y, 7, 9, 3, 5);
@@ -358,7 +432,6 @@ bool Screen::calcAvaliableMove(){
 		}
 		break;
 	case 2://士
-		cout << "pick 1";
 		if ((x + y) % 2 == 1) {//line use
 			markMove(x - 1, y - 1, 0, 2, 3, 5);
 			markMove(x + 1, y + 1, 0, 2, 3, 5);
@@ -396,23 +469,128 @@ bool Screen::calcAvaliableMove(){
 		break;
 	case 4://車
 	case 11:
-	case 6://包
-	case 13:
-		tmpX = x+1;
+		tmpX = x + 1;
 		while (markMove(tmpX, y)) {
 			tmpX++;
 		}
-		tmpX = x-1;
+		tmpX = x - 1;
 		while (markMove(tmpX, y)) {
 			tmpX--;
 		}
-		tmpY = y+1;
+		tmpY = y + 1;
 		while (markMove(x, tmpY)) {
 			tmpY++;
 		}
-		tmpY = y-1;
+		tmpY = y - 1;
 		while (markMove(x, tmpY)) {
 			tmpY--;
+		}
+		break;
+	case 6://包
+	case 13:
+		tmpX = x+1;
+		for (;tmpX < 9; tmpX++) {
+			if (board[tmpX][y] == 0){
+				//blank ==> moveable
+				moveAble[tmpX][y] = MOVEABLE;
+				continue;
+			}
+			break;
+		}
+		tmpX++;
+		for (bool find = false; !find && tmpX < 9; tmpX++) {
+			if (board[tmpX][y] == 0) continue;
+			if (turn == RED) {
+				if (board[tmpX][y] < 8) {
+					moveAble[tmpX][y] = EATABLE;
+					find = true;
+				}
+			}
+			else{
+				if (board[tmpX][y] >= 8) {
+					moveAble[tmpX][y] = EATABLE;
+					find = true;
+				}
+			}
+
+		}
+		tmpX = x-1;
+		for (; tmpX >= 0; tmpX--) {
+			if (board[tmpX][y] == 0) {
+				//blank ==> moveable
+				moveAble[tmpX][y] = MOVEABLE;
+				continue;
+			}
+			break;
+		}
+		tmpX--;
+		for (bool find = false; !find && tmpX >= 0; tmpX--) {
+			if (board[tmpX][y] == 0) continue;
+			if (turn == RED) {
+				if (board[tmpX][y] < 8) {
+					moveAble[tmpX][y] = EATABLE;
+					find = true;
+				}
+			}
+			else {
+				if (board[tmpX][y] >= 8) {
+					moveAble[tmpX][y] = EATABLE;
+					find = true;
+				}
+			}
+
+		}
+		tmpY = y+1;
+		for (; tmpY < 10; tmpY++) {
+			if (board[x][tmpY] == 0) {
+				//blank ==> moveable
+				moveAble[x][tmpY] = MOVEABLE;
+				continue;
+			}
+			break;
+		}
+		tmpY++;
+		for (bool find = false; !find && tmpY < 10; tmpY++) {
+			if (board[x][tmpY] == 0) continue;
+			if (turn == RED) {
+				if (board[x][tmpY] < 8) {
+					moveAble[x][tmpY] = EATABLE;
+					find = true;
+				}
+			}
+			else {
+				if (board[x][tmpY] >= 8) {
+					moveAble[x][tmpY] = EATABLE;
+					find = true;
+				}
+			}
+
+		}
+		tmpY = y-1;
+		for (; tmpY >= 0; tmpY--) {
+			if (board[x][tmpY] == 0) {
+				//blank ==> moveable
+				moveAble[x][tmpY] = MOVEABLE;
+				continue;
+			}
+			break;
+		}
+		tmpY--;
+		for (bool find = false; !find && tmpY >= 0; tmpY--) {
+			if (board[x][tmpY] == 0) continue;
+			if (turn == RED) {
+				if (board[x][tmpY] < 8) {
+					moveAble[x][tmpY] = EATABLE;
+					find = true;
+				}
+			}
+			else {
+				if (board[x][tmpY] >= 8) {
+					moveAble[x][tmpY] = EATABLE;
+					find = true;
+				}
+			}
+
 		}
 		break;
 	case 5://馬

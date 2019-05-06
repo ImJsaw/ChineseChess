@@ -4,7 +4,7 @@
 
 
 Screen myScreen;
-bool up,down,r,l,enter;
+bool up,down,r,l,enter,esc;
 
 void initial() {
 	//init screen
@@ -14,6 +14,10 @@ void initial() {
 	down = false;
 	r = false;
 	l = false;
+	enter = false;
+	esc = false;
+
+	myScreen.update();
 }
 
 //key press and release count one time & update screen
@@ -26,7 +30,7 @@ void keyEvent() {
 		myScreen.moveCursor(UP);
 		myScreen.update();
 		//up arrow event
-		printf("The Up Arrow Has Been Pressed\n");
+		//printf("The Up Arrow Has Been Pressed\n");
 	}
 
 	if (GetAsyncKeyState(VK_DOWN))
@@ -37,7 +41,7 @@ void keyEvent() {
 		myScreen.update();
 		//down arrow event
 
-		printf("The DOWN Arrow Has Been Pressed\n");
+		//printf("The DOWN Arrow Has Been Pressed\n");
 	}
 
 	if (GetAsyncKeyState(VK_LEFT))
@@ -48,7 +52,7 @@ void keyEvent() {
 		myScreen.update();
 		//left arrow event
 
-		printf("The LEFT ARROW Has Been Pressed\n");
+		//printf("The LEFT ARROW Has Been Pressed\n");
 	}
 
 	if (GetAsyncKeyState(VK_RIGHT))
@@ -58,18 +62,26 @@ void keyEvent() {
 		myScreen.moveCursor(RIGHT);
 		myScreen.update();
 		//rihgt arrow event
-		printf("The RIGHT ARROW Has Been Pressed\n");
+		//printf("The RIGHT ARROW Has Been Pressed\n");
 	}
 
 	if (GetAsyncKeyState(VK_RETURN))
 		enter = true;
 	if (!GetAsyncKeyState(VK_RETURN) && enter == true) {
 		enter = false;
-
+		if (myScreen.showMenu) exit(0);
 		myScreen.checkCursor();
 		//enter event
 
-		printf("ENTER Has Been Pressed\n");
+		//printf("ENTER Has Been Pressed\n");
+	}
+
+	if (GetAsyncKeyState(VK_ESCAPE))
+		esc = true;
+	if (!GetAsyncKeyState(VK_ESCAPE) && esc == true) {
+		esc = false;
+
+		myScreen.callMenu();
 	}
 }
 
